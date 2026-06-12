@@ -1,4 +1,3 @@
-
 //---Types of users---
 const ROLES = {
   SUPER_ADMIN: "SUPER_ADMIN",
