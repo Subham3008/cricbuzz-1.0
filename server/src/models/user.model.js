@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 import { object } from "zod";
-import { ROLES } from "../shared/constants/model.constant.js";
+import { ROLES } from "../shared/constants/role.js";
 
 const userSchema = new Schema(
   {
