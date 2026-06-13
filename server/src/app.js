@@ -21,8 +21,9 @@ export default function createApp() {
     });
   });
 
-
+//----players routes------
   app.use("/api/players", playerRouter)
+  
 
   //----- global error handling middleware ------
   app.use(Errorhandler);
