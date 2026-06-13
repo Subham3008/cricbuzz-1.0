@@ -5,10 +5,11 @@ import compression from "compression"
 import cors from "cors"
 import ratelimit from "express-rate-limit"
 import env from "../../config/env.js"
+import cookieParser from 'cookie-parser'
 
 export default function securityMiddleware(app) {
   app.use(helmet(app))
-
+app.use(cookieParser())
   app.use(cors({
     origin: env.CORS_ORIGIN.split(",").map((origin) => origin.trim()),
     Credential: true
