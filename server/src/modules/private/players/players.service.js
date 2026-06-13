@@ -49,3 +49,19 @@ export const getAllPlayersService = async () => {
   }
   return players;
 };
+
+/**
+ * @description Get a player by id
+ * @param {String} id - Player id
+ * @returns {Object} Player object
+ */
+export const getPlayerByIdService = async (id) => {
+  let player = await playerModel.findById(id);
+  if (!player) {
+    throw new NotFoundError("Player not found");
+  }
+  if (player.isDeleted === true) {
+    throw new NotFoundError("Player is deleted.");
+  }
+  return player;
+};

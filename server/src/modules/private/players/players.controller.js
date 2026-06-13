@@ -1,6 +1,7 @@
 import {
   createPlayerService,
   getAllPlayersService,
+  getPlayerByIdService
 } from "./players.service.js";
 import { StatusCodes } from "http-status-codes";
 
@@ -32,5 +33,21 @@ export const getAllPlayersController = async (req, res) => {
     success: true,
     message: "Players fetched successfully",
     data: players,
+  });
+};
+
+/**
+ * @description Get a player by id
+ * @route GET /api/players/:id
+ * @access Private
+ * @returns {Object} Player object
+ */
+export const getPlayerByIdController = async (req, res) => {
+  let { id } = req.params;
+  let player = await getPlayerByIdService(id);
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "Player fetched successfully",
+    data: player,
   });
 };

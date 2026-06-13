@@ -1,10 +1,12 @@
 import express from "express";
 import {
   createPlayerController,
-  getPlayersController,
+  getAllPlayersController,
+  getPlayerByIdController,
 } from "./players.controller.js";
 
 const playerRouter = express.Router();
+
 /**
  * @description Create a new player
  * @route POST /api/players
@@ -20,5 +22,13 @@ playerRouter.post("/", createPlayerController);
  * @returns {Object} Array of player objects
  */
 playerRouter.get("/", getAllPlayersController);
+
+/**
+ * @description Get a player by id
+ * @route GET /api/players/:id
+ * @access Private
+ * @returns {Object} Player object
+ */
+playerRouter.get("/:id", getPlayerByIdController);
 
 export default playerRouter;
