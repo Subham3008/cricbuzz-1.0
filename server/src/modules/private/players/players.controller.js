@@ -1,7 +1,8 @@
 import {
   createPlayerService,
   getAllPlayersService,
-  getPlayerByIdService
+  getPlayerByIdService,
+  updatePlayerByIdService,
 } from "./players.service.js";
 import { StatusCodes } from "http-status-codes";
 
@@ -49,5 +50,23 @@ export const getPlayerByIdController = async (req, res) => {
     success: true,
     message: "Player fetched successfully",
     data: player,
+  });
+};
+
+/**
+ * @description Update a player by id
+ * @route PATCH /api/players/:id
+ * @access Private
+ * @returns {Object} Player object
+ */
+export const updatePlayerByIdController = async (req, res) => {
+  let { id } = req.params;
+  let data = req.body;
+  let updatedPlayer = await updatePlayerByIdService(id, data);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "Player updated successfully",
+    data: updatedPlayer,
   });
 };

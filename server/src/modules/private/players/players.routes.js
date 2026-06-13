@@ -3,6 +3,7 @@ import {
   createPlayerController,
   getAllPlayersController,
   getPlayerByIdController,
+  updatePlayerByIdController,
 } from "./players.controller.js";
 
 const playerRouter = express.Router();
@@ -30,5 +31,13 @@ playerRouter.get("/", getAllPlayersController);
  * @returns {Object} Player object
  */
 playerRouter.get("/:id", getPlayerByIdController);
+
+/**
+ * @description Update a player by id
+ * @route PATCH /api/players/:id
+ * @access Private
+ * @returns {Object} Player object
+ */
+playerRouter.patch("/:id", updatePlayerByIdController);
 
 export default playerRouter;

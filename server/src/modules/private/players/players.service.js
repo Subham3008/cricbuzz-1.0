@@ -65,3 +65,23 @@ export const getPlayerByIdService = async (id) => {
   }
   return player;
 };
+
+/**
+ * @description Update a player by id
+ * @param {String} id - Player id
+ * @param {Object} data - Player data
+ * @returns {Object} Player object
+ */
+export const updatePlayerByIdService = async (id, data) => {
+  // check if player exists
+  let isPlayerExists = await playerModel.findById(id);
+  if (!isPlayerExists) {
+    throw new NotFoundError("Player not found");
+  }
+  // update the player
+  let updatedPlayer = await playerModel.findByIdAndUpdate(id, data, {
+    new: true,
+    runValidators: true,
+  });
+  return updatedPlayer;
+};
