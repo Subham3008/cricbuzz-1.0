@@ -6,6 +6,7 @@ import securityMiddleware from "./shared/middlewares/security.middleware.js";
 import authRouter from './modules/auth/auth.routes.js'
 import googleOAuthMiddleware from "./shared/middlewares/googleOAuth.middleware.js";
 import userRoutes from './modules/users/user.routes.js'
+import matchRoutes from './modules/match/match.route.js'
 export default function createApp() {
   const app = express();
 
@@ -16,6 +17,8 @@ export default function createApp() {
 
   securityMiddleware(app)
   googleOAuthMiddleware(app)
+  //---match route--->>
+  app.use('/api/match', matchRoutes)
   app.use('/api/auth', authRouter)
   app.use('/api/users', userRoutes)
   //----health route-->>
@@ -24,6 +27,7 @@ export default function createApp() {
       message: "healthy",
     });
   });
+
 
 
   //----- global error handling middleware ------
