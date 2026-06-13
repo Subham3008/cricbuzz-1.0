@@ -4,6 +4,7 @@ import {
   getAllPlayersController,
   getPlayerByIdController,
   updatePlayerByIdController,
+  deletePlayerByIdController,
 } from "./players.controller.js";
 
 const playerRouter = express.Router();
@@ -39,5 +40,13 @@ playerRouter.get("/:id", getPlayerByIdController);
  * @returns {Object} Player object
  */
 playerRouter.patch("/:id", updatePlayerByIdController);
+
+/**
+ * @description Delete a player by id
+ * @route DELETE /api/players/:id
+ * @access Private
+ * @returns {Object} Player object
+ */
+playerRouter.delete("/:id", deletePlayerByIdController);
 
 export default playerRouter;

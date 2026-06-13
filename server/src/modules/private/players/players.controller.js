@@ -3,6 +3,7 @@ import {
   getAllPlayersService,
   getPlayerByIdService,
   updatePlayerByIdService,
+  deletePlayerByIdService,
 } from "./players.service.js";
 import { StatusCodes } from "http-status-codes";
 
@@ -68,5 +69,20 @@ export const updatePlayerByIdController = async (req, res) => {
     success: true,
     message: "Player updated successfully",
     data: updatedPlayer,
+  });
+};
+
+/**
+ * @description Delete a player by id
+ * @route DELETE /api/players/:id
+ * @access Private
+ * @returns {Object} Player object
+ */
+export const deletePlayerByIdController = async (req, res) => {
+  let { id } = req.params;
+  let deletedPlayer = await deletePlayerByIdService(id);
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "Player deleted successfully",
   });
 };

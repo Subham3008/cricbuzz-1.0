@@ -85,3 +85,17 @@ export const updatePlayerByIdService = async (id, data) => {
   });
   return updatedPlayer;
 };
+
+/**
+ * @description Delete a player by id
+ * @param {String} id - Player id
+ * @returns {Object} Player object
+ */
+export const deletePlayerByIdService = async (id) => {
+  let isPlayerExists = await playerModel.findById(id);
+  if (!isPlayerExists) {
+    throw new NotFoundError("Player not found");
+  }
+  let deletedPlayer = await playerModel.findByIdAndDelete(id);
+  return deletedPlayer;
+};
