@@ -1,61 +1,75 @@
-import { Router } from "express";
-import MatchController from "./match.controller.js";
-import validateRequest from "../../shared/middlewares/validateRequest.js";
-import {
-  createMatchValidator,
-  updateMatchValidator,
-} from "./validators/match.validator.js";
+import express from "express";
+import asyncHandler from "../../shared/utils/asyncHandler.js";
+import { authMiddleware, authorizeRoles } from "../../shared/middlewares/auth.middleware.js";
+import { ROLES } from "../../shared/constants/role.js";
+import * as matchController from "./match.controller.js";
 
+/**
+ * Match Routes
+ * -----------------------------------------------------------------------
+ * PUBLIC  (no auth)             — GET /api/match, GET /api/match/:id
+ * ADMIN   (auth + role check)   — POST, PATCH, DELETE /api/match
+ * -----------------------------------------------------------------------
+ */
 
-// ─── Match Routes ──────────────────────────────────────────────────────────
-// Defines all REST endpoints for the Match module.
-//
-// Route summary:
-//   POST   /            → create a new match
-//   GET    /            → list all matches (supports ?status & ?format filters)
-//   GET    /:id         → get a single match by ID
-//   PATCH  /:id         → partially update a match
-//   DELETE /:id         → soft-delete a match
-//
-// The validateRequest middleware runs the Zod schema BEFORE the controller,
-// so invalid payloads never reach the service layer.
-// ────────────────────────────────────────────────────────────────────────────
+const router = express.Router();
 
-const router = Router();
-const matchController = new MatchController();
+// ─── Public Routes (no auth) ─────────────────────────────────────────
 
+/**
+ * GET /api/match
+ * List all active matches. Supports ?status= and ?seriesId= filters.
+ */
+router.get(
+  "/",
+  asyncHandler(matchController.getMatches)
+);
 
-// ── Create Match ─────────────────────────────────────────────────────────
+/**
+ * GET /api/match/:id
+ * Get match details by ID.
+ */
+router.get(
+  "/:id",
+  asyncHandler(matchController.getMatchById)
+);
+
+// ─── Admin Routes (auth required) ────────────────────────────────────
+
+/**
+ * POST /api/match
+ * Create a new match.
+ * Access: SUPER_ADMIN | ADMIN
+ */
 router.post(
   "/",
-  validateRequest(createMatchValidator),
-  matchController.createMatch
+  authMiddleware,
+  authorizeRoles(ROLES.SUPER_ADMIN, ROLES.ADMIN),
+  asyncHandler(matchController.createMatch)
 );
 
-// ── Get All Matches ──────────────────────────────────────────────────────
-router.get(
-  "/",
-  matchController.getAllMatches
-);
-
-// ── Get Match By ID ──────────────────────────────────────────────────────
-router.get(
-  "/:id",
-  matchController.getMatchById
-);
-
-// ── Update Match ─────────────────────────────────────────────────────────
+/**
+ * PATCH /api/match/:id
+ * Update an existing match (partial update).
+ * Access: SUPER_ADMIN | ADMIN
+ */
 router.patch(
   "/:id",
-  validateRequest(updateMatchValidator),
-  matchController.updateMatch
+  authMiddleware,
+  authorizeRoles(ROLES.SUPER_ADMIN, ROLES.ADMIN),
+  asyncHandler(matchController.updateMatch)
 );
 
-// ── Delete Match ─────────────────────────────────────────────────────────
+/**
+ * DELETE /api/match/:id
+ * Soft-delete a match.
+ * Access: SUPER_ADMIN | ADMIN
+ */
 router.delete(
   "/:id",
-  matchController.deleteMatch
+  authMiddleware,
+  authorizeRoles(ROLES.SUPER_ADMIN, ROLES.ADMIN),
+  asyncHandler(matchController.deleteMatch)
 );
-
 
 export default router;

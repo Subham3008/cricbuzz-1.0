@@ -1,87 +1,83 @@
-import MatchService from "./match.service.js";
-import asyncHandler from "../../shared/utils/asyncHandler.js";
+import { StatusCodes } from "http-status-codes";
+import * as matchService from "./match.service.js";
 
+/**
+ * Match Controller
+ * -----------------------------------------------------------------------
+ * HTTP adapter — receives req/res, delegates to the service layer.
+ * Async errors forwarded to Errorhandler via asyncHandler in routes.
+ * -----------------------------------------------------------------------
+ */
 
-// ─── Match Controller ──────────────────────────────────────────────────────
-// The controller is the HTTP adapter — it receives Express req/res objects,
-// delegates the actual work to MatchService, and sends back a JSON response.
-//
-// Each method is wrapped with asyncHandler so that any thrown errors
-// automatically land in the global error-handling middleware.
-//
-// NOTE: We use arrow functions for the methods so that `this` is
-// lexically bound to the class instance (important because Express
-// will call these as standalone callbacks, not as obj.method()).
-// ────────────────────────────────────────────────────────────────────────────
+/**
+ * GET /api/match
+ * List all active matches. Supports ?status= and ?seriesId= filters.
+ */
+export const getMatches = async (req, res) => {
+  const matches = await matchService.getMatches(req.query);
 
-export default class MatchController {
-
-  constructor() {
-    this.matchService = new MatchService();
-  }
-
-
-  // ── POST /api/matches ──────────────────────────────────────────────────
-  // Creates a new match from the validated request body.
-  createMatch = asyncHandler(async (req, res) => {
-    const match = await this.matchService.createMatch(req.body);
-
-    res.status(201).json({
-      success: true,
-      message: "Match created successfully",
-      data: match,
-    });
+  return res.status(StatusCodes.OK).json({
+    success: true,
+    count: matches.length,
+    data: matches,
   });
+};
 
+/**
+ * GET /api/match/:id
+ * Get match details by ID (with populated refs).
+ */
+export const getMatchById = async (req, res) => {
+  const match = await matchService.getMatchById(req.params.id);
 
-  // ── GET /api/matches ───────────────────────────────────────────────────
-  // Returns all matches. Supports optional query filters (?status=LIVE).
-  getAllMatches = asyncHandler(async (req, res) => {
-    const matches = await this.matchService.getAllMatches(req.query);
-
-    res.status(200).json({
-      success: true,
-      message: "Matches fetched successfully",
-      data: matches,
-    });
+  return res.status(StatusCodes.OK).json({
+    success: true,
+    data: match,
   });
+};
 
+/**
+ * POST /api/match
+ * Create a new match.
+ * Access: SUPER_ADMIN | ADMIN
+ */
+export const createMatch = async (req, res) => {
+  const match = await matchService.createMatch(req.body, req.user.id);
 
-  // ── GET /api/matches/:id ───────────────────────────────────────────────
-  // Returns a single match by its MongoDB _id.
-  getMatchById = asyncHandler(async (req, res) => {
-    const match = await this.matchService.getMatchById(req.params.id);
-
-    res.status(200).json({
-      success: true,
-      message: "Match fetched successfully",
-      data: match,
-    });
+  return res.status(StatusCodes.CREATED).json({
+    success: true,
+    data: match,
   });
+};
 
+/**
+ * PATCH /api/match/:id
+ * Update an existing match (partial update).
+ * Access: SUPER_ADMIN | ADMIN
+ */
+export const updateMatch = async (req, res) => {
+  const match = await matchService.updateMatch(
+    req.params.id,
+    req.body,
+    req.user.id
+  );
 
-  // ── PATCH /api/matches/:id ─────────────────────────────────────────────
-  // Partially updates a match. Only the fields sent in the body are changed.
-  updateMatch = asyncHandler(async (req, res) => {
-    const match = await this.matchService.updateMatch(req.params.id, req.body);
-
-    res.status(200).json({
-      success: true,
-      message: "Match updated successfully",
-      data: match,
-    });
+  return res.status(StatusCodes.OK).json({
+    success: true,
+    data: match,
   });
+};
 
+/**
+ * DELETE /api/match/:id
+ * Soft-delete a match.
+ * Access: SUPER_ADMIN | ADMIN
+ */
+export const deleteMatch = async (req, res) => {
+  const match = await matchService.deleteMatch(req.params.id, req.user.id);
 
-  // ── DELETE /api/matches/:id ────────────────────────────────────────────
-  // Soft-deletes a match (sets isDeleted = true).
-  deleteMatch = asyncHandler(async (req, res) => {
-    const match = await this.matchService.deleteMatch(req.params.id);
-
-    res.status(200).json({
-      success: true,
-      message: "Match deleted successfully",
-      data: match,
-    });
+  return res.status(StatusCodes.OK).json({
+    success: true,
+    data: match,
   });
-}
+};
