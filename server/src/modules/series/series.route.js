@@ -1,7 +1,11 @@
 import { Router } from "express";
 import SeriesController from "./series.controller.js";
-import { createSeriesSchema, updateSeriesSchema } from "./validators/series.validator.js";
+import {
+  createSeriesSchema,
+  updateSeriesSchema,
+} from "./validators/series.validator.js";
 import validateRequest from "../../shared/middlewares/validateRequest.js";
+import asyncHandler from "../../shared/utils/asyncHandler.js";
 
 const router = Router();
 const seriesController = new SeriesController();
@@ -9,19 +13,28 @@ const seriesController = new SeriesController();
 router.post(
   "/",
   validateRequest(createSeriesSchema),
-  seriesController.createSeries.bind(seriesController),
+  asyncHandler(seriesController.createSeries.bind(seriesController)),
 );
 
-router.get("/", seriesController.getAllSeries.bind(seriesController));
+router.get(
+  "/",
+  asyncHandler(seriesController.getAllSeries.bind(seriesController)),
+);
 
-router.get("/:id", seriesController.getSeriesById.bind(seriesController));
+router.get(
+  "/:id",
+  asyncHandler(seriesController.getSeriesById.bind(seriesController)),
+);
 
 router.patch(
-    "/:id",
-    validateRequest(updateSeriesSchema),
-    seriesController.updateSeries.bind(seriesController),
-  );
+  "/:id",
+  validateRequest(updateSeriesSchema),
+  asyncHandler(seriesController.updateSeries.bind(seriesController)),
+);
 
-router.delete("/:id", seriesController.deleteSeries.bind(seriesController));
+router.delete(
+  "/:id",
+  asyncHandler(seriesController.deleteSeries.bind(seriesController)),
+);
 
 export default router;
