@@ -1,64 +1,85 @@
 import { z } from "zod";
-
-
-// ─── Match Validators (Zod) ────────────────────────────────────────────────
-// We validate the incoming request body using Zod before it ever reaches
-// the controller / service layer. This ensures that bad data is rejected
-// early with clear, user-friendly error messages.
-//
-// Two schemas are exported:
-//   1. createMatchValidator  — used on POST  /api/matches
-//   2. updateMatchValidator  — used on PATCH /api/matches/:id
-// ────────────────────────────────────────────────────────────────────────────
-
+import { MATCH_STATUS } from "../../../shared/constants/matchStatus.js";
 
 /**
- * Validator for creating a new match.
- * All core fields are required: teamA, teamB, venue, format, startDate.
- * Status is optional — defaults to "SCHEDULED" in the model.
+ * Validators — Match
+ * -----------------------------------------------------------------------
+ * Zod schemas for every write endpoint. Used by validateRequest middleware.
+ * -----------------------------------------------------------------------
  */
-export const createMatchValidator = z.object({
+
+// Reusable ObjectId validator (24-char hex string)
+const objectId = z
+  .string()
+  .regex(/^[0-9a-fA-F]{24}$/, "Must be a valid ObjectId");
+
+// Sub-schema for a single playing XI entry
+const playingPlayerSchema = z.object({
+  player: objectId,
+  isCaptain: z.boolean().optional().default(false),
+  isWicketKeeper: z.boolean().optional().default(false),
+});
+
+/** Create match — POST /api/match */
+export const createMatchSchema = z.object({
   body: z.object({
-    teamA: z
-      .string({ required_error: "Team A name is required" })
-      .min(1, "Team A name cannot be empty"),
-
-    teamB: z
-      .string({ required_error: "Team B name is required" })
-      .min(1, "Team B name cannot be empty"),
-
-    // Optional at creation — the model defaults to SCHEDULED
-    status: z
-      .enum(["SCHEDULED", "LIVE", "COMPLETED", "ABANDONED"])
-      .optional(),
-
+    seriesId: objectId,
+    matchNumber: z.string().min(1, "Match number cannot be empty").optional(),
     venue: z
       .string({ required_error: "Venue is required" })
       .min(1, "Venue cannot be empty"),
-
-    format: z.enum(["T20", "ODI", "TEST"], {
-      required_error: "Match format is required (T20 | ODI | TEST)",
-    }),
-
-    // ISO-8601 datetime string (e.g. "2026-06-15T14:00:00Z")
-    startDate: z
-      .string({ required_error: "Start date is required" })
+    startTime: z
+      .string({ required_error: "Start time is required" })
       .datetime("Must be a valid ISO-8601 date-time string"),
+    status: z.enum(Object.values(MATCH_STATUS)).optional(),
+    team1: objectId,
+    team2: objectId,
+    tossWinner: objectId.optional(),
+    tossDecision: z.enum(["BAT", "BOWL"]).optional(),
+    playingXI: z
+      .object({
+        team1: z.array(playingPlayerSchema).optional(),
+        team2: z.array(playingPlayerSchema).optional(),
+      })
+      .optional(),
+    winner: objectId.optional(),
+    result: z.string().optional(),
   }),
 });
 
+/** Update match — PATCH /api/match/:id */
+export const updateMatchSchema = z.object({
+  params: z.object({
+    id: objectId,
+  }),
+  body: z
+    .object({
+      seriesId: objectId.optional(),
+      matchNumber: z.string().min(1, "Match number cannot be empty").optional(),
+      venue: z.string().min(1, "Venue cannot be empty").optional(),
+      startTime: z.string().datetime().optional(),
+      status: z.enum(Object.values(MATCH_STATUS)).optional(),
+      team1: objectId.optional(),
+      team2: objectId.optional(),
+      tossWinner: objectId.optional(),
+      tossDecision: z.enum(["BAT", "BOWL"]).optional(),
+      playingXI: z
+        .object({
+          team1: z.array(playingPlayerSchema).optional(),
+          team2: z.array(playingPlayerSchema).optional(),
+        })
+        .optional(),
+      winner: objectId.optional(),
+      result: z.string().optional(),
+    })
+    .refine((data) => Object.keys(data).length > 0, {
+      message: "At least one field must be provided for update",
+    }),
+});
 
-/**
- * Validator for updating an existing match.
- * Every field is optional — the client only sends what needs to change.
- */
-export const updateMatchValidator = z.object({
-  body: z.object({
-    teamA: z.string().min(1, "Team A name cannot be empty").optional(),
-    teamB: z.string().min(1, "Team B name cannot be empty").optional(),
-    status: z.enum(["SCHEDULED", "LIVE", "COMPLETED", "ABANDONED"]).optional(),
-    venue: z.string().min(1, "Venue cannot be empty").optional(),
-    format: z.enum(["T20", "ODI", "TEST"]).optional(),
-    startDate: z.string().datetime().optional(),
+/** Get/Delete match by id — GET|DELETE /api/match/:id */
+export const matchIdParamSchema = z.object({
+  params: z.object({
+    id: objectId,
   }),
 });
