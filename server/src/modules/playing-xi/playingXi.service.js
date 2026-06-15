@@ -2,6 +2,7 @@ import * as matchRepository from "../../repository/match.repository.js";
 import NotFoundError from "../../shared/errors/NotFound.error.js";
 import BadRequestError from "../../shared/errors/BadRequest.error.js";
 import { MATCH_STATUS } from "../../shared/constants/matchStatus.js";
+import { emitToMatch } from "../../sockets/socketGateway.js";
 
 /**
  * Playing XI Service
@@ -101,12 +102,17 @@ export const selectPlayingXI = async (matchId, payload, userId) => {
   validateTeamXI(payload.team2, "team2", team2SquadIds);
 
   // Persist and transition status
-  return matchRepository.updateById(matchId, {
+  const updated = await matchRepository.updateById(matchId, {
     "playingXI.team1": payload.team1,
     "playingXI.team2": payload.team2,
     status: MATCH_STATUS.PLAYING_XI_SELECTED,
     updatedBy: userId,
   });
+
+  // ─── Socket.IO event ──────────────────────────────────────────────
+  emitToMatch(matchId, "playingXI.updated", updated);
+
+  return updated;
 };
 
 /**
