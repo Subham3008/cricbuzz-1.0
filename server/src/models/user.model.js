@@ -16,10 +16,8 @@ const userSchema = new Schema(
       lowercase: true,
       trim: true,
     },
-
     password: {
       type: String,
-
       trim: true,
     },
     role: {

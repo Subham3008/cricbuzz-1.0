@@ -19,8 +19,8 @@ export const create = async (data) => {
   return matchModel
     .findById(match._id)
     .populate("seriesId", "name")
-    .populate("team1", "name shortName")
-    .populate("team2", "name shortName");
+    .populate("team1", "name shortName squadPlayers")
+    .populate("team2", "name shortName squadPlayers");
 };
 
 /**
@@ -40,6 +40,7 @@ export const findAll = (filter = {}) =>
 
 /**
  * Find a single active match by its ID.
+ * squadPlayers included — playing XI selection ke liye squad check hota hai.
  * @param {string} id - Match ObjectId
  * @returns {Promise<object|null>} match document or null
  */
@@ -47,8 +48,8 @@ export const findById = (id) =>
   matchModel
     .findOne({ _id: id, isDeleted: false })
     .populate("seriesId", "name")
-    .populate("team1", "name shortName")
-    .populate("team2", "name shortName")
+    .populate("team1", "name shortName squadPlayers")  // ← squadPlayers added
+    .populate("team2", "name shortName squadPlayers")  // ← squadPlayers added
     .populate("tossWinner", "name shortName")
     .populate("winner", "name shortName")
     .populate("playingXI.team1.player", "name role")
@@ -67,10 +68,12 @@ export const updateById = (id, data) =>
       runValidators: true,
     })
     .populate("seriesId", "name")
-    .populate("team1", "name shortName")
-    .populate("team2", "name shortName")
+    .populate("team1", "name shortName squadPlayers")  // ← squadPlayers added
+    .populate("team2", "name shortName squadPlayers")  // ← squadPlayers added
     .populate("tossWinner", "name shortName")
-    .populate("winner", "name shortName");
+    .populate("winner", "name shortName")
+    .populate("playingXI.team1.player", "name role")
+    .populate("playingXI.team2.player", "name role");
 
 /**
  * Soft-delete a match by ID (sets isDeleted: true).
