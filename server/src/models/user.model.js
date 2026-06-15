@@ -16,10 +16,10 @@ const userSchema = new Schema(
       lowercase: true,
       trim: true,
     },
-   
+
     password: {
       type: String,
-     
+
       trim: true,
     },
     role: {
@@ -31,12 +31,12 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    picture:{
-        type:String,
-        default:"https://imgs.search.brave.com/prvIxPo67PTI-yZ-6lm-tuU9ibY9GKqY7vcFf3ppXPk/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9wbmcu/cG5ndHJlZS5jb20v/cG5nLXZlY3Rvci8y/MDI1MDgxOC9vdXJt/aWQvcG5ndHJlZS13/aGF0c2FwcC1kZWZh/dWx0LXByb2ZpbGUt/cGhvdG8tdmVjdG9y/LXBuZy1pbWFnZV8x/NzAzNDM5Ny53ZWJw"
+    picture: {
+      type: String,
+      default: "https://imgs.search.brave.com/prvIxPo67PTI-yZ-6lm-tuU9ibY9GKqY7vcFf3ppXPk/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9wbmcu/cG5ndHJlZS5jb20v/cG5nLXZlY3Rvci8y/MDI1MDgxOC9vdXJt/aWQvcG5ndHJlZS13/aGF0c2FwcC1kZWZh/dWx0LXByb2ZpbGUt/cGhvdG8tdmVjdG9y/LXBuZy1pbWFnZV8x/NzAzNDM5Ny53ZWJw"
     },
-    refreshToken:{
-      type:String
+    refreshToken: {
+      type: String
     }
   },
   {
@@ -46,11 +46,11 @@ const userSchema = new Schema(
 
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) {
-    return ;
+    return;
   }
 
   this.password = await bcrypt.hash(this.password, 10);
- 
+
 });
 
 userSchema.methods.comparePassword = async function (candidatePassword) {
