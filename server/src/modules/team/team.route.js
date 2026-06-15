@@ -94,5 +94,30 @@ router.delete(
   asyncHandler(adminController.deleteTeam),
 );
 
+/**
+ * POST /api/teams/:teamId/squad
+ * Add a player to a team's squad.
+ * Access: SUPER_ADMIN | ADMIN
+ */
+router.post(
+  "/:teamId/squad",
+  authMiddleware,
+  authorizeRoles(ROLES.SUPER_ADMIN, ROLES.ADMIN),
+  validateRequest(addPlayerToSquadSchema),
+  asyncHandler(adminController.addPlayerToSquad),
+);
+
+/**
+ * DELETE /api/teams/:teamId/squad/:playerId
+ * Remove a player from a team's squad.
+ * Access: SUPER_ADMIN | ADMIN
+ */
+router.delete(
+  "/:teamId/squad/:playerId",
+  authMiddleware,
+  authorizeRoles(ROLES.SUPER_ADMIN, ROLES.ADMIN),
+  validateRequest(removePlayerFromSquadSchema),
+  asyncHandler(adminController.removePlayerFromSquad),
+);
 
 export default router;
