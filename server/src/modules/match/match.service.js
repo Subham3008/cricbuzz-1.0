@@ -45,6 +45,14 @@ export const updateMatch = async (id, payload, userId) => {
       );
     }
 
+    // Single Live Match Constraint
+    if (payload.status === MATCH_STATUS.LIVE && match.status !== MATCH_STATUS.LIVE) {
+      const activeMatch = await matchRepository.findAll({ status: MATCH_STATUS.LIVE });
+      if (activeMatch && activeMatch.length > 0) {
+        throw new BadRequestError("Another match is currently live. Please complete or pause it first.");
+      }
+    }
+
     // Toss validation
     if (payload.status === MATCH_STATUS.TOSS_COMPLETED) {
       if (!payload.tossWinner) throw new BadRequestError("tossWinner required");

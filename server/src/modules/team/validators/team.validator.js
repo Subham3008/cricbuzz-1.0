@@ -16,7 +16,7 @@ export const createTeamSchema = z.object({
   body: z.object({
     name: z.string().trim().min(1, "Name is required"),
     shortName: z.string().trim().min(1, "Short name is required").max(10),
-    logo: z.string().trim().url("Logo must be a valid URL"),
+    logo: z.string().trim().refine(val => val.startsWith('http') || val.startsWith('data:image/'), "Logo must be a valid URL or base64 data URI"),
     primaryColor: z
       .string()
       .trim()
@@ -34,7 +34,7 @@ export const updateTeamSchema = z.object({
     .object({
       name: z.string().trim().min(1).optional(),
       shortName: z.string().trim().min(1).max(10).optional(),
-      logo: z.string().trim().url().optional(),
+      logo: z.string().trim().refine(val => val.startsWith('http') || val.startsWith('data:image/'), "Logo must be a valid URL or base64 data URI").optional(),
       primaryColor: z
         .string()
         .trim()

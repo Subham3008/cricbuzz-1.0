@@ -19,8 +19,8 @@ const ScoringPanel = () => {
   const [wicketTarget, setWicketTarget] = useState(null); // which batsman slot (0 or 1) got out
 
   useEffect(() => {
-    if (!matches.length) dispatch(fetchMatches());
-  }, [dispatch, matches.length]);
+    dispatch(fetchMatches());
+  }, [dispatch]);
 
   // Populate initial batsmen from playingXI if available
   useEffect(() => {
@@ -138,10 +138,20 @@ const ScoringPanel = () => {
               </div>
               <button
                 onClick={() => handleWicket(slot)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[12px] font-bold rounded-lg transition-colors"
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-bold rounded-lg transition-colors ${
+                  batsmen[slot] 
+                    ? 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200' 
+                    : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200'
+                }`}
               >
-                <AlertTriangle size={13} />
-                Wicket!
+                {batsmen[slot] ? (
+                  <>
+                    <AlertTriangle size={13} />
+                    Wicket!
+                  </>
+                ) : (
+                  <>Select Batsman</>
+                )}
               </button>
             </div>
           ))}

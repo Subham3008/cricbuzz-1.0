@@ -9,6 +9,7 @@ import { useAuth } from "../../hooks/useAuth";
 
 const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState('');
 
   const {
     requestHandleLoginSubmit,
@@ -16,7 +17,18 @@ const LoginScreen = () => {
     handleSubmit,
     errors,
     navigate,
+    dispatch
   } = useAuth();
+
+  const onLoginSubmit = async (data) => {
+    try {
+      setLoginError('');
+      await requestHandleLoginSubmit(data);
+    } catch (err) {
+      const message = err?.response?.data?.message || err?.message || 'Failed to login';
+      setLoginError(message);
+    }
+  };
 
   return (
     <div className="h-screen overflow-hidden bg-linear-to-br from-green-100 via-white to-green-900 flex items-center justify-center p-4">
@@ -102,11 +114,14 @@ const LoginScreen = () => {
 
               {/* Form */}
               <form
-                onSubmit={handleSubmit(
-                  requestHandleLoginSubmit
-                )}
+                onSubmit={handleSubmit(onLoginSubmit)}
                 className="space-y-3"
               >
+                {loginError && (
+                  <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm font-medium border border-red-100">
+                    {loginError}
+                  </div>
+                )}
                 {/* Email */}
                 <div>
                   <label className="mb-1 block font-medium text-gray-700">

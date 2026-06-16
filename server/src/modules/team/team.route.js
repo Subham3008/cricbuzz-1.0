@@ -63,7 +63,7 @@ router.get(
 router.post(
   "/",
   authMiddleware,
-  authorizeRoles(ROLES.SUPER_ADMIN, ROLES.ADMIN),
+  authorizeRoles(ROLES.SUPER_ADMIN),
   validateRequest(createTeamSchema),
   asyncHandler(adminController.createTeam),
 );
@@ -76,7 +76,7 @@ router.post(
 router.patch(
   "/:id",
   authMiddleware,
-  authorizeRoles(ROLES.SUPER_ADMIN, ROLES.ADMIN),
+  authorizeRoles(ROLES.SUPER_ADMIN),
   validateRequest(updateTeamSchema),
   asyncHandler(adminController.updateTeam),
 );
@@ -89,7 +89,7 @@ router.patch(
 router.delete(
   "/:id",
   authMiddleware,
-  authorizeRoles(ROLES.SUPER_ADMIN, ROLES.ADMIN),
+  authorizeRoles(ROLES.SUPER_ADMIN),
   validateRequest(teamIdParamSchema),
   asyncHandler(adminController.deleteTeam),
 );
@@ -102,7 +102,7 @@ router.delete(
 router.post(
   "/:teamId/squad",
   authMiddleware,
-  authorizeRoles(ROLES.SUPER_ADMIN, ROLES.ADMIN),
+  authorizeRoles(ROLES.SUPER_ADMIN),
   validateRequest(addPlayerToSquadSchema),
   asyncHandler(adminController.addPlayerToSquad),
 );
@@ -115,7 +115,7 @@ router.post(
 router.delete(
   "/:teamId/squad/:playerId",
   authMiddleware,
-  authorizeRoles(ROLES.SUPER_ADMIN, ROLES.ADMIN),
+  authorizeRoles(ROLES.SUPER_ADMIN),
   validateRequest(removePlayerFromSquadSchema),
   asyncHandler(adminController.removePlayerFromSquad),
 );

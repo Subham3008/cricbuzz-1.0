@@ -5,18 +5,18 @@ import { X, AlertTriangle } from 'lucide-react';
 const ChangePlayerModal = ({ outBatsman, squad, onConfirm, onClose }) => {
   const [newBatsman, setNewBatsman] = useState('');
 
-  if (!outBatsman) return null;
-
-  // Filter out the dismissed batsman from available options
-  const available = (squad || []).filter(p => p._id !== outBatsman._id);
+  // Filter out the dismissed batsman (if any) from available options
+  const available = (squad || []).filter(p => !outBatsman || p._id !== outBatsman._id);
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-red-50">
           <div className="flex items-center gap-2">
-            <AlertTriangle size={18} className="text-red-500" />
-            <h2 className="text-lg font-bold text-slate-900">Wicket! Change Batsman</h2>
+            <AlertTriangle size={18} className={outBatsman ? "text-red-500" : "text-[#1E402F]"} />
+            <h2 className="text-lg font-bold text-slate-900">
+              {outBatsman ? "Wicket! Change Batsman" : "Select Batsman"}
+            </h2>
           </div>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-full">
             <X size={18} />
@@ -24,12 +24,14 @@ const ChangePlayerModal = ({ outBatsman, squad, onConfirm, onClose }) => {
         </div>
 
         <div className="p-6 space-y-5">
-          <div className="bg-red-50 border border-red-100 rounded-lg p-3 flex items-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-red-500"></span>
-            <p className="text-sm font-bold text-red-700">
-              {outBatsman.name || 'Batsman'} is OUT
-            </p>
-          </div>
+          {outBatsman && (
+            <div className="bg-red-50 border border-red-100 rounded-lg p-3 flex items-center gap-3">
+              <span className="w-2 h-2 rounded-full bg-red-500"></span>
+              <p className="text-sm font-bold text-red-700">
+                {outBatsman.name || 'Batsman'} is OUT
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-1.5">Select Next Batsman *</label>

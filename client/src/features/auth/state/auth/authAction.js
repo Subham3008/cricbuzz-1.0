@@ -10,7 +10,7 @@ export  const loginUser=createAsyncThunk("api/auth/login",async(credentials,thun
         
         
     } catch (error) {
-        return thunkApi.rejectWithValue(error)
+        return thunkApi.rejectWithValue(error.response?.data?.message || error.message || "Login failed");
     }
 
 })
@@ -23,7 +23,7 @@ export const registerUser = createAsyncThunk(
             // backend sets cookies and returns { message, user }
             return res.data.user;
         } catch (error) {
-            return thunkApi.rejectWithValue(error.response?.data || error);
+            return thunkApi.rejectWithValue(error.response?.data?.message || error.message || "Registration failed");
         }
     }
 );
@@ -35,7 +35,7 @@ export const currentUser=createAsyncThunk("api/auth/me",async(_,thunkApi)=>{
         
         
     } catch (error) {
-        return thunkApi.rejectWithValue(error.response?.data || error)
+        return thunkApi.rejectWithValue(error.response?.data?.message || error.message || "Failed to fetch current user");
     }
 })
 

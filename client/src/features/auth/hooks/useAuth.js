@@ -12,12 +12,9 @@ export const useAuth = () => {
   const navigate = useNavigate();
 
   const requestHandleLoginSubmit = async (data) => {
-    try {
-      await dispatch(loginUser(data)).unwrap();
-      navigate("/home");
-    } catch (error) {
-      console.log("error in login", error);
-    }
+    const res = await dispatch(loginUser(data)).unwrap();
+    navigate("/home");
+    return res;
   };
   
   const requestHandleRegisterSubmit=async(data)=>{

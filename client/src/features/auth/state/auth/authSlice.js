@@ -5,7 +5,7 @@ let authSlice=createSlice({
 name:'auth',
 initialState:{
     employee:null,
-    isLoading:false
+    isLoading:true
     
 },
 reducers:{

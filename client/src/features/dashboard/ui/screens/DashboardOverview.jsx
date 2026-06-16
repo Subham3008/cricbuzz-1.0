@@ -69,21 +69,42 @@ const DashboardOverview = () => {
            <div className="absolute top-0 right-0 p-4 opacity-5">
              <BarChart2 size={120} />
            </div>
-           <h3 className="absolute top-6 left-6 text-[18px] font-bold text-slate-900">Traffic & API Usage</h3>
-           
-           <div className="flex items-end justify-between w-full h-48 px-10 gap-2 mt-8 z-10">
-              {[40, 60, 30, 80, 50, 90, 70, 45, 85, 55, 65, 35, 75, 95].map((height, i) => (
-                <div key={i} className="w-full bg-[#e7f9eb] hover:bg-[#2ebd4f] transition-all duration-300 rounded-t-sm" style={{ height: `${height}%` }}></div>
-              ))}
+           <div className="w-full flex items-center justify-between absolute top-6 left-6 pr-12">
+             <h3 className="text-[18px] font-bold text-slate-900">Traffic & API Usage</h3>
+             <div className="flex items-center gap-2">
+               <span className="flex items-center text-[12px] font-bold text-slate-500"><div className="w-2 h-2 rounded-full bg-[#2ebd4f] mr-1.5"></div> Success</span>
+               <span className="flex items-center text-[12px] font-bold text-slate-500"><div className="w-2 h-2 rounded-full bg-slate-200 mr-1.5"></div> Latency</span>
+             </div>
            </div>
-           <div className="w-full border-t border-slate-100 mt-2 px-10 flex justify-between text-[11px] font-bold text-slate-400">
-             <span>Mon</span>
-             <span>Tue</span>
-             <span>Wed</span>
-             <span>Thu</span>
-             <span>Fri</span>
-             <span>Sat</span>
-             <span>Sun</span>
+           
+           <div className="flex items-end justify-between w-full h-52 px-6 gap-4 mt-10 z-10">
+              {[
+                { label: 'Mon', val1: 45, val2: 30 },
+                { label: 'Tue', val1: 65, val2: 40 },
+                { label: 'Wed', val1: 85, val2: 50 },
+                { label: 'Thu', val1: 55, val2: 35 },
+                { label: 'Fri', val1: 90, val2: 60 },
+                { label: 'Sat', val1: 100, val2: 70 },
+                { label: 'Sun', val1: 75, val2: 45 }
+              ].map((day, i) => (
+                <div key={i} className="flex flex-col items-center w-full group relative">
+                  {/* Tooltip */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-12 bg-slate-800 text-white text-[11px] font-bold py-1.5 px-3 rounded shadow-lg whitespace-nowrap z-20 pointer-events-none">
+                    {day.val1}k Requests
+                  </div>
+                  
+                  {/* Bars */}
+                  <div className="flex items-end justify-center w-full gap-1 h-full">
+                     <div className="w-full max-w-[24px] bg-[#e7f9eb] group-hover:bg-[#2ebd4f] transition-all duration-300 rounded-t-md relative overflow-hidden" style={{ height: `${day.val1}%` }}>
+                       <div className="absolute bottom-0 w-full bg-gradient-to-t from-[#2ebd4f]/20 to-transparent h-1/2"></div>
+                     </div>
+                     <div className="w-full max-w-[12px] bg-slate-100 group-hover:bg-slate-300 transition-all duration-300 rounded-t-sm" style={{ height: `${day.val2}%` }}></div>
+                  </div>
+                  
+                  {/* Label */}
+                  <span className="text-[12px] font-bold text-slate-400 mt-3 group-hover:text-slate-700 transition-colors">{day.label}</span>
+                </div>
+              ))}
            </div>
         </div>
 

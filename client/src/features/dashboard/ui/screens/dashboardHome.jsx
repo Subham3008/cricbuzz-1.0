@@ -1,19 +1,68 @@
 import React, { useState } from 'react';
 import { Play, RotateCcw, Activity } from 'lucide-react';
+import ChangePlayerModal from '../components/ChangePlayerModal';
 
 const DashboardHome = () => {
   const [score, setScore] = useState({ runs: 324, wickets: 4, overs: '45.2' });
   const [timeline, setTimeline] = useState(['1', '4', '0', 'W', '1', '2']);
-  
+  const [history, setHistory] = useState([]);
+  const [showWicketModal, setShowWicketModal] = useState(false);
+  const [activeBatsmen, setActiveBatsmen] = useState([
+    { _id: 'b1', name: 'D. Warner', runs: 84, balls: 62 },
+    { _id: 'b2', name: 'S. Smith', runs: 42, balls: 38 }
+  ]);
+  const [squad] = useState([
+    { _id: 'b3', name: 'M. Labuschagne' },
+    { _id: 'b4', name: 'T. Head' },
+    { _id: 'b5', name: 'G. Maxwell' },
+  ]);
+
+  const pushHistory = () => {
+    setHistory(prev => [...prev, { score, timeline, activeBatsmen }]);
+  };
+
   const handleRun = (r) => {
+    pushHistory();
     setScore(prev => ({...prev, runs: prev.runs + r}));
     setTimeline(prev => [...prev, r.toString()].slice(-10));
+    // Simulate updating active batsman score
+    setActiveBatsmen(prev => [
+      { ...prev[0], runs: prev[0].runs + r, balls: prev[0].balls + 1 },
+      prev[1]
+    ]);
   };
-  const handleWicket = () => {
+  
+  const handleWicketClick = () => {
+    setShowWicketModal(true);
+  };
+
+  const confirmWicket = (newBatsmanId) => {
+    pushHistory();
     setScore(prev => ({...prev, wickets: Math.min(10, prev.wickets + 1)}));
     setTimeline(prev => [...prev, 'W'].slice(-10));
+    
+    // Replace the out batsman with the new one
+    const incomingBatsman = squad.find(p => p._id === newBatsmanId);
+    if (incomingBatsman) {
+      setActiveBatsmen(prev => [
+        { _id: incomingBatsman._id, name: incomingBatsman.name, runs: 0, balls: 0 },
+        prev[1]
+      ]);
+    }
+    setShowWicketModal(false);
   };
+
+  const handleUndo = () => {
+    if (history.length === 0) return;
+    const lastState = history[history.length - 1];
+    setScore(lastState.score);
+    setTimeline(lastState.timeline);
+    setActiveBatsmen(lastState.activeBatsmen);
+    setHistory(prev => prev.slice(0, -1));
+  };
+
   const handleExtra = (type) => {
+    pushHistory();
     setScore(prev => ({...prev, runs: prev.runs + 1}));
     setTimeline(prev => [...prev, type].slice(-10));
   };
@@ -88,7 +137,11 @@ const DashboardHome = () => {
         <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-[#e5e7eb] p-8">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-[18px] font-bold text-slate-900">Update Scoreboard</h3>
-            <button className="flex items-center text-[13px] font-bold text-[#4f46e5] hover:text-indigo-800 bg-[#e0e7ff] px-4 py-2 rounded transition-colors tracking-wide">
+            <button 
+              onClick={handleUndo}
+              disabled={history.length === 0}
+              className={`flex items-center text-[13px] font-bold px-4 py-2 rounded transition-colors tracking-wide ${history.length > 0 ? 'text-[#4f46e5] hover:text-indigo-800 bg-[#e0e7ff]' : 'text-slate-400 bg-slate-100 cursor-not-allowed'}`}
+            >
               <RotateCcw size={16} className="mr-2" strokeWidth={2.5} />
               Undo Last Entry
             </button>
@@ -109,7 +162,7 @@ const DashboardHome = () => {
           </div>
           
           <div className="grid grid-cols-2 gap-4">
-            <button onClick={handleWicket} className="h-16 bg-[#ef4444] hover:bg-[#dc2626] border border-[#b91c1c] text-white font-black text-xl rounded-md shadow-sm transition-colors uppercase tracking-widest">
+            <button onClick={handleWicketClick} className="h-16 bg-[#ef4444] hover:bg-[#dc2626] border border-[#b91c1c] text-white font-black text-xl rounded-md shadow-sm transition-colors uppercase tracking-widest">
               Wicket
             </button>
             <div className="grid grid-cols-2 gap-4">
@@ -124,19 +177,15 @@ const DashboardHome = () => {
           <div className="bg-white rounded-lg shadow-sm border border-[#e5e7eb] p-6">
              <h3 className="text-[13px] font-bold text-slate-500 uppercase tracking-wider mb-5 border-b border-[#e5e7eb] pb-3">Active Batsmen</h3>
              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Play size={14} className="text-[#2ebd4f] mr-2.5" fill="currentColor" />
-                    <span className="font-bold text-[15px] text-slate-800">D. Warner</span>
+                {activeBatsmen.map((batsman, idx) => (
+                  <div key={batsman._id} className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      {idx === 0 ? <Play size={14} className="text-[#2ebd4f] mr-2.5" fill="currentColor" /> : <span className="w-6 inline-block" />}
+                      <span className="font-bold text-[15px] text-slate-800">{batsman.name}</span>
+                    </div>
+                    <span className="font-black text-slate-900 text-lg">{batsman.runs} <span className="text-[13px] text-slate-400 font-bold ml-1">({batsman.balls})</span></span>
                   </div>
-                  <span className="font-black text-slate-900 text-lg">84 <span className="text-[13px] text-slate-400 font-bold ml-1">(62)</span></span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center ml-6">
-                    <span className="font-bold text-[15px] text-slate-600">S. Smith</span>
-                  </div>
-                  <span className="font-black text-slate-900 text-lg">42 <span className="text-[13px] text-slate-400 font-bold ml-1">(38)</span></span>
-                </div>
+                ))}
              </div>
           </div>
 
@@ -163,6 +212,15 @@ const DashboardHome = () => {
         </div>
 
       </div>
+
+      {showWicketModal && (
+        <ChangePlayerModal 
+          outBatsman={activeBatsmen[0]}
+          squad={squad}
+          onConfirm={confirmWicket}
+          onClose={() => setShowWicketModal(false)}
+        />
+      )}
     </div>
   );
 };
