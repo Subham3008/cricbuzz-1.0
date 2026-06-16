@@ -2,6 +2,7 @@ import * as matchRepository from "../../repository/match.repository.js";
 import NotFoundError from "../../shared/errors/NotFound.error.js";
 import BadRequestError from "../../shared/errors/BadRequest.error.js";
 import { MATCH_STATUS } from "../../shared/constants/matchStatus.js";
+import { emitToMatch } from "../../sockets/socketGateway.js";
 
 const VALID_TRANSITIONS = {
   [MATCH_STATUS.UPCOMING]: [MATCH_STATUS.TOSS_COMPLETED],
@@ -60,7 +61,29 @@ export const updateMatch = async (id, payload, userId) => {
     }
   }
 
-  return matchRepository.updateById(id, { ...payload, updatedBy: userId });
+  // DB update
+  const updated = await matchRepository.updateById(id, { ...payload, updatedBy: userId });
+
+  // ─── Socket.IO events ─────────────────────────────────────────────
+  if (payload.status && payload.status !== match.status) {
+    if (payload.status === MATCH_STATUS.TOSS_COMPLETED) {
+      emitToMatch(id, "toss.updated", updated);
+    }
+
+    if (payload.status === MATCH_STATUS.LIVE) {
+      emitToMatch(id, "match.started", updated);
+    }
+
+    if (payload.status === MATCH_STATUS.INNINGS_BREAK) {
+      emitToMatch(id, "match.innings_break", updated);
+    }
+
+    if (payload.status === MATCH_STATUS.COMPLETED) {
+      emitToMatch(id, "match.completed", updated);
+    }
+  }
+
+  return updated;
 };
 
 export const deleteMatch = async (id, userId) => {
