@@ -19,6 +19,6 @@ const commentarySchema = new Schema(
 
 commentarySchema.index({ matchId: 1, createdAt: -1 });
 
-const commentaryModel = model("Commentry", commentarySchema)
+const commentaryModel = model("Commentary", commentarySchema)
 
 export default commentaryModel

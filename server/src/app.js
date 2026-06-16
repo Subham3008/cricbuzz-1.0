@@ -12,6 +12,7 @@ import matchRoutes from "./modules/match/match.route.js";
 import teamRoutes from "./modules/team/team.route.js";
 import playingXiRoutes from "./modules/playing-xi/playingXi.route.js"
 import scoreRoutes from "./modules/score/score.route.js"
+import commentaryRoutes from "./modules/commentary/commentary.route.js";
 
 // ─── Public Routes (user/) ────────────────────────────────────────────
 import homePublicRouter from "./modules/user/home/home.route.js";
@@ -53,6 +54,7 @@ export default function createApp() {
   app.use("/api/team", teamRoutes);
   app.use("/api/players", playerRouter);
   app.use("/api/score", scoreRoutes);
+  app.use("/api/commentary", commentaryRoutes);
 
   // ─── Health Check ───────────────────────────────────────────────────
   app.get("/health", (req, res) => {
