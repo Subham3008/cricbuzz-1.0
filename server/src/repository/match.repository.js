@@ -1,81 +1,89 @@
 import matchModel from "../models/match.model.js";
 
+/**
+ * Repository Layer — Match
+ * -----------------------------------------------------------------------
+ * Pure Mongoose data-access functions. No business logic, no HTTP
+ * knowledge, no error throwing beyond what Mongoose itself throws.
+ * Every query filters isDeleted: false to enforce the soft-delete pattern.
+ * -----------------------------------------------------------------------
+ */
 
-// ─── Match Repository ──────────────────────────────────────────────────────
-// The repository is the ONLY layer that talks directly to MongoDB.
-// Every method automatically filters out soft-deleted documents
-// (isDeleted: true) so the rest of the app never sees them.
-//
-// This follows the Repository Pattern — the service layer calls
-// repository methods and never imports Mongoose models directly.
-// ────────────────────────────────────────────────────────────────────────────
+/**
+ * Create a new match document.
+ * @param {object} data - Match fields
+ * @returns {Promise<object>} created match document
+ */
+export const create = async (data) => {
+  const match = await matchModel.create(data);
+  return matchModel
+    .findById(match._id)
+    .populate("seriesId", "name")
+    .populate("team1", "name shortName squadPlayers")
+    .populate("team2", "name shortName squadPlayers");
+};
 
-export default class MatchRepo {
+/**
+ * Find all active (non-deleted) matches.
+ * @param {object} filter - additional query filters
+ * @returns {Promise<object[]>} array of match documents
+ */
+export const findAll = (filter = {}) =>
+  matchModel
+    .find({ isDeleted: false, ...filter })
+    .populate("seriesId", "name")
+    .populate("team1", "name shortName")
+    .populate("team2", "name shortName")
+    .populate("tossWinner", "name shortName")
+    .populate("winner", "name shortName")
+    .sort({ startTime: -1 });
 
-  /**
-   * Insert a new match document into the database.
-   * @param {Object} payload - Validated match data from the DTO
-   * @returns {Promise<Object>} The newly created match document
-   */
-  async create(payload) {
-    return await matchModel.create(payload);
-  }
+/**
+ * Find a single active match by its ID.
+ * squadPlayers included — playing XI selection ke liye squad check hota hai.
+ * @param {string} id - Match ObjectId
+ * @returns {Promise<object|null>} match document or null
+ */
+export const findById = (id) =>
+  matchModel
+    .findOne({ _id: id, isDeleted: false })
+    .populate("seriesId", "name")
+    .populate("team1", "name shortName squadPlayers")  // ← squadPlayers added
+    .populate("team2", "name shortName squadPlayers")  // ← squadPlayers added
+    .populate("tossWinner", "name shortName")
+    .populate("winner", "name shortName")
+    .populate("playingXI.team1.player", "name role")
+    .populate("playingXI.team2.player", "name role");
 
-  /**
-   * Retrieve all matches that haven't been soft-deleted.
-   * Accepts an optional query object for filtering (status, format, etc.)
-   * @param {Object} query - Additional filter criteria
-   * @returns {Promise<Array>} List of match documents (plain JS objects)
-   */
-  async findAll(query = {}) {
-    return await matchModel
-      .find({ isDeleted: false, ...query })
-      .sort({ startDate: -1 })  // newest matches first
-      .lean();
-  }
+/**
+ * Update a match by ID and return the updated document.
+ * @param {string} id - Match ObjectId
+ * @param {object} data - Fields to update
+ * @returns {Promise<object|null>} updated match document or null
+ */
+export const updateById = (id, data) =>
+  matchModel
+    .findOneAndUpdate({ _id: id, isDeleted: false }, data, {
+      new: true,
+      runValidators: true,
+    })
+    .populate("seriesId", "name")
+    .populate("team1", "name shortName squadPlayers")  // ← squadPlayers added
+    .populate("team2", "name shortName squadPlayers")  // ← squadPlayers added
+    .populate("tossWinner", "name shortName")
+    .populate("winner", "name shortName")
+    .populate("playingXI.team1.player", "name role")
+    .populate("playingXI.team2.player", "name role");
 
-  /**
-   * Find a single match by its MongoDB _id.
-   * Returns null if the match doesn't exist or has been soft-deleted.
-   * @param {string} id - MongoDB ObjectId
-   * @returns {Promise<Object|null>} Match document or null
-   */
-  async findById(id) {
-    return await matchModel
-      .findOne({ _id: id, isDeleted: false })
-      .lean();
-  }
-
-  /**
-   * Update a match's fields.
-   * Uses findOneAndUpdate with { new: true } so we get the updated doc back.
-   * @param {string} id - MongoDB ObjectId
-   * @param {Object} payload - Fields to update
-   * @returns {Promise<Object|null>} Updated match document
-   */
-  async update(id, payload) {
-    return await matchModel
-      .findOneAndUpdate(
-        { _id: id, isDeleted: false },
-        payload,
-        { new: true }
-      )
-      .lean();
-  }
-
-  /**
-   * Soft-delete a match by flipping its isDeleted flag to true.
-   * The document stays in the DB for audit / history purposes.
-   * @param {string} id - MongoDB ObjectId
-   * @returns {Promise<Object|null>} The soft-deleted match document
-   */
-  async delete(id) {
-    return await matchModel
-      .findOneAndUpdate(
-        { _id: id, isDeleted: false },
-        { isDeleted: true },
-        { new: true }
-      )
-      .lean();
-  }
-}
+/**
+ * Soft-delete a match by ID (sets isDeleted: true).
+ * @param {string} id - Match ObjectId
+ * @param {string} updatedBy - User ObjectId performing the deletion
+ * @returns {Promise<object|null>} soft-deleted match document or null
+ */
+export const softDeleteById = (id, updatedBy) =>
+  matchModel.findOneAndUpdate(
+    { _id: id, isDeleted: false },
+    { isDeleted: true, updatedBy },
+    { new: true }
+  );

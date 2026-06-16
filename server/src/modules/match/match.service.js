@@ -1,110 +1,93 @@
-import MatchRepo from "../../repository/match.repository.js";
-import { createMatchDto, updateMatchDto } from "./dto/match.dto.js";
+import * as matchRepository from "../../repository/match.repository.js";
+import NotFoundError from "../../shared/errors/NotFound.error.js";
+import BadRequestError from "../../shared/errors/BadRequest.error.js";
+import { MATCH_STATUS } from "../../shared/constants/matchStatus.js";
+import { emitToMatch } from "../../sockets/socketGateway.js";
 
+const VALID_TRANSITIONS = {
+  [MATCH_STATUS.UPCOMING]: [MATCH_STATUS.TOSS_COMPLETED],
+  [MATCH_STATUS.TOSS_COMPLETED]: [MATCH_STATUS.PLAYING_XI_SELECTED],
+  [MATCH_STATUS.PLAYING_XI_SELECTED]: [MATCH_STATUS.LIVE],
+  [MATCH_STATUS.LIVE]: [MATCH_STATUS.INNINGS_BREAK, MATCH_STATUS.COMPLETED],
+  [MATCH_STATUS.INNINGS_BREAK]: [MATCH_STATUS.LIVE, MATCH_STATUS.COMPLETED],
+  [MATCH_STATUS.COMPLETED]: [],
+};
 
-// ─── Match Service ─────────────────────────────────────────────────────────
-// The service layer holds all the business logic for match operations.
-// It sits between the controller (HTTP) and the repository (database).
-//
-// Responsibilities:
-//   • Validate business rules (e.g. "does this match exist?")
-//   • Transform raw payloads via DTOs before passing to the repo
-//   • Throw meaningful errors when something goes wrong
-//
-// The controller should NEVER call the repository directly —
-// it always goes through this service.
-// ────────────────────────────────────────────────────────────────────────────
+export const getMatches = async (query = {}) => {
+  const filter = {};
+  if (query.status) filter.status = query.status;
+  if (query.seriesId) filter.seriesId = query.seriesId;
+  return matchRepository.findAll(filter);
+};
 
-export default class MatchService {
+export const getMatchById = async (id) => {
+  const match = await matchRepository.findById(id);
+  if (!match) throw new NotFoundError("Match not found");
+  return match;
+};
 
-  constructor() {
-    // Instantiate the repository — single source of DB access
-    this.matchRepo = new MatchRepo();
-  }
+export const createMatch = async (payload, userId) => {
+  return matchRepository.create({ ...payload, createdBy: userId, updatedBy: userId });
+};
 
+export const updateMatch = async (id, payload, userId) => {
+  const match = await matchRepository.findById(id);
 
-  /**
-   * Create a new match.
-   * Transforms the raw payload through createMatchDto before saving.
-   *
-   * @param {Object} payload - Validated request body
-   * @returns {Promise<Object>} The newly created match
-   */
-  async createMatch(payload) {
-    const dto = createMatchDto(payload);
-    const match = await this.matchRepo.create(dto);
-    return match;
-  }
+  if (!match) throw new NotFoundError("Match not found");
 
+  // State machine check
+  if (payload.status && payload.status !== match.status) {
+    const allowed = VALID_TRANSITIONS[match.status] || [];
 
-  /**
-   * Fetch all matches, with optional query-string filters.
-   * Supported filters: status, format (passed via req.query).
-   *
-   * @param {Object} query - Query string parameters from the request
-   * @returns {Promise<Array>} Array of match documents
-   */
-  async getAllMatches(query) {
-    const filter = {};
-
-    // Only add filters that the client actually sent
-    if (query.status) filter.status = query.status;
-    if (query.format) filter.format = query.format;
-
-    const matches = await this.matchRepo.findAll(filter);
-    return matches;
-  }
-
-
-  /**
-   * Fetch a single match by its ID.
-   * Throws an error if the match doesn't exist (or was soft-deleted).
-   *
-   * @param {string} id - MongoDB ObjectId
-   * @returns {Promise<Object>} The match document
-   */
-  async getMatchById(id) {
-    const match = await this.matchRepo.findById(id);
-
-    if (!match) {
-      throw new Error("Match not found");
+    if (!allowed.includes(payload.status)) {
+      throw new BadRequestError(
+        `Invalid transition: ${match.status} → ${payload.status}. Allowed: ${allowed.join(", ") || "none"}`
+      );
     }
 
-    return match;
+    // Toss validation
+    if (payload.status === MATCH_STATUS.TOSS_COMPLETED) {
+      if (!payload.tossWinner) throw new BadRequestError("tossWinner required");
+      if (!payload.tossDecision) throw new BadRequestError("tossDecision required");
+      if (!["BAT", "BOWL"].includes(payload.tossDecision)) {
+        throw new BadRequestError("tossDecision must be BAT or BOWL");
+      }
+    }
+
+    // Complete validation
+    if (payload.status === MATCH_STATUS.COMPLETED) {
+      if (!payload.winner) throw new BadRequestError("winner required");
+      if (!payload.result) throw new BadRequestError("result required");
+    }
   }
 
+  // DB update
+  const updated = await matchRepository.updateById(id, { ...payload, updatedBy: userId });
 
-  /**
-   * Update an existing match.
-   * First verifies that the match exists, then applies partial updates
-   * through the updateMatchDto.
-   *
-   * @param {string} id      - MongoDB ObjectId
-   * @param {Object} payload - Fields to update
-   * @returns {Promise<Object>} The updated match document
-   */
-  async updateMatch(id, payload) {
-    // Make sure the match actually exists before attempting an update
-    await this.getMatchById(id);
+  // ─── Socket.IO events ─────────────────────────────────────────────
+  if (payload.status && payload.status !== match.status) {
+    if (payload.status === MATCH_STATUS.TOSS_COMPLETED) {
+      emitToMatch(id, "toss.updated", updated);
+    }
 
-    const dto = updateMatchDto(payload);
-    const updatedMatch = await this.matchRepo.update(id, dto);
-    return updatedMatch;
+    if (payload.status === MATCH_STATUS.LIVE) {
+      emitToMatch(id, "match.started", updated);
+    }
+
+    if (payload.status === MATCH_STATUS.INNINGS_BREAK) {
+      emitToMatch(id, "match.innings_break", updated);
+    }
+
+    if (payload.status === MATCH_STATUS.COMPLETED) {
+      emitToMatch(id, "match.completed", updated);
+    }
   }
 
+  return updated;
+};
 
-  /**
-   * Soft-delete a match.
-   * The record stays in the database but is hidden from all queries.
-   *
-   * @param {string} id - MongoDB ObjectId
-   * @returns {Promise<Object>} The soft-deleted match document
-   */
-  async deleteMatch(id) {
-    // Verify the match exists first
-    await this.getMatchById(id);
-
-    const deletedMatch = await this.matchRepo.delete(id);
-    return deletedMatch;
-  }
-}
+export const deleteMatch = async (id, userId) => {
+  const match = await matchRepository.softDeleteById(id, userId);
+  if (!match) throw new NotFoundError("Match not found");
+  return match;
+};
