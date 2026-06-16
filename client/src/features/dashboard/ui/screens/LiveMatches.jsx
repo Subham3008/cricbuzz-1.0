@@ -77,7 +77,7 @@ const LiveMatches = () => {
                        <Clock size={14} className="mr-1.5" /> 
                        {match.venue || 'TBA'}
                     </div>
-                    <button onClick={() => navigate('/home')} className="w-full py-2.5 bg-[#e7f9eb] hover:bg-[#dcfce7] text-[#15803d] font-bold text-sm rounded transition-colors border border-[#bbf7d0]">
+                    <button onClick={() => navigate(`/home/scoring/${match._id}`)} className="w-full py-2.5 bg-[#e7f9eb] hover:bg-[#dcfce7] text-[#15803d] font-bold text-sm rounded transition-colors border border-[#bbf7d0]">
                        Open Scoring Panel
                     </button>
                  </div>
