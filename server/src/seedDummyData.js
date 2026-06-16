@@ -92,10 +92,10 @@ const seedDummyData = async () => {
     }
 
     // Assign to squad
-    india.squad = createdIndPlayers.map(p => p._id);
+    india.squadPlayers = createdIndPlayers.map(p => p._id);
     await india.save();
     
-    australia.squad = createdAusPlayers.map(p => p._id);
+    australia.squadPlayers = createdAusPlayers.map(p => p._id);
     await australia.save();
 
     // 6. Create Live Match

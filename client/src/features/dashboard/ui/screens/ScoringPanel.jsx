@@ -22,14 +22,19 @@ const ScoringPanel = () => {
     dispatch(fetchMatches());
   }, [dispatch]);
 
-  // Populate initial batsmen from playingXI if available
+  // Populate initial batsmen from playingXI or team squad if available
   useEffect(() => {
-    if (match?.playingXI) {
+    if (match) {
       const battingTeamXI = match.tossDecision === 'BAT'
         ? match.playingXI?.team1
         : match.playingXI?.team2;
       if (battingTeamXI?.length >= 2) {
         setBatsmen([battingTeamXI[0]?.player, battingTeamXI[1]?.player]);
+      } else {
+        const battingTeam = match.tossDecision === 'BAT' ? match.team1 : match.team2;
+        if (battingTeam?.squadPlayers?.length >= 2) {
+          setBatsmen([battingTeam.squadPlayers[0], battingTeam.squadPlayers[1]]);
+        }
       }
     }
   }, [match]);
@@ -57,15 +62,19 @@ const ScoringPanel = () => {
 
   const handleNewBatsman = (newPlayerId) => {
     const updated = [...batsmen];
-    updated[wicketTarget] = { _id: newPlayerId, name: `Player #${newPlayerId.slice(-4)}` };
+    const playerDetail = battingSquad.find(p => p?._id === newPlayerId);
+    updated[wicketTarget] = playerDetail || { _id: newPlayerId, name: `Player #${newPlayerId.slice(-4)}` };
     setBatsmen(updated);
     setWicketTarget(null);
-    // In production — PATCH scorecard API here
   };
 
-  // Build squad from playingXI for the incoming batsman dropdown
-  const battingSquad = (match.tossDecision === 'BAT' ? match.playingXI?.team1 : match.playingXI?.team2)
-    ?.map(p => p.player) || [];
+  // Build squad from playingXI or fallback to the team's squadPlayers list
+  const battingTeam = match.tossDecision === 'BAT' ? match.team1 : match.team2;
+  const battingSquad = (
+    (match.tossDecision === 'BAT' ? match.playingXI?.team1 : match.playingXI?.team2)?.map(p => p.player) ||
+    battingTeam?.squadPlayers ||
+    []
+  );
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -127,7 +136,7 @@ const ScoringPanel = () => {
             <div key={slot} className="flex items-center justify-between px-6 py-4">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-[#e7f9eb] flex items-center justify-center font-black text-[#1E402F]">
-                  {slot === 0 ? '🏏' : '🏏'}
+                  🏏
                 </div>
                 <div>
                   <p className="font-bold text-slate-800">
@@ -136,23 +145,27 @@ const ScoringPanel = () => {
                   <p className="text-xs text-slate-400 font-medium">{slot === 0 ? 'Striker' : 'Non-Striker'}</p>
                 </div>
               </div>
-              <button
-                onClick={() => handleWicket(slot)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-bold rounded-lg transition-colors ${
-                  batsmen[slot] 
-                    ? 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200' 
-                    : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200'
-                }`}
-              >
-                {batsmen[slot] ? (
-                  <>
-                    <AlertTriangle size={13} />
-                    Wicket!
-                  </>
-                ) : (
-                  <>Select Batsman</>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setWicketTarget(slot)}
+                  className="px-3 py-1.5 text-[12px] font-bold rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors"
+                >
+                  {batsmen[slot] ? 'Change' : 'Select'}
+                </button>
+                {batsmen[slot] && (
+                  <button
+                    onClick={() => {
+                      alert(`${batsmen[slot].name} is out!`);
+                      const updated = [...batsmen];
+                      updated[slot] = null;
+                      setBatsmen(updated);
+                    }}
+                    className="px-3 py-1.5 text-[12px] font-bold rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-colors"
+                  >
+                    Wicket
+                  </button>
                 )}
-              </button>
+              </div>
             </div>
           ))}
         </div>
