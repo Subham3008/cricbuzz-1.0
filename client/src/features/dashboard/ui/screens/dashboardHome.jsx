@@ -129,13 +129,11 @@ const getFallbackPlayers = (matchInfo, playingXI, currentScore) => {
         : [];
 
   return {
-    battingPlayers: (battingXI || [])
-      .slice(0, 2)
-      .map((entry, index) => ({
-        _id: entry?.player?._id || `fallback-${index}`,
-        name: entry?.player?.name || "Unknown Player",
-        onStrike: index === 0,
-      })),
+    battingPlayers: (battingXI || []).slice(0, 2).map((entry, index) => ({
+      _id: entry?.player?._id || `fallback-${index}`,
+      name: entry?.player?.name || "Unknown Player",
+      onStrike: index === 0,
+    })),
     bowlingPlayer:
       bowlingXI.find((entry) =>
         ["BOWLER", "ALL_ROUNDER"].includes(
@@ -298,7 +296,7 @@ const DashboardHome = () => {
   }, [selectedMatchId, loadMatchData]);
 
   useEffect(() => {
-    const socket = io("http://localhost:3000", {
+    const socket = io("https://cricbuzz-1-0.onrender.com", {
       withCredentials: true,
       transports: ["websocket"],
     });
@@ -441,13 +439,20 @@ const DashboardHome = () => {
   }, [livePlayers, matchInfo, matchCenter, currentScore]);
 
   const { battingOptions, bowlingOptions } = useMemo(
-    () => getSelectionOptions(matchInfo, matchCenter?.playingXI || null, currentScore),
+    () =>
+      getSelectionOptions(
+        matchInfo,
+        matchCenter?.playingXI || null,
+        currentScore,
+      ),
     [matchInfo, matchCenter, currentScore],
   );
 
   useEffect(() => {
     const fallbackStrikerId =
-      activeBatsmen.find((player) => player.onStrike)?.id || battingOptions[0]?.id || "";
+      activeBatsmen.find((player) => player.onStrike)?.id ||
+      battingOptions[0]?.id ||
+      "";
     const fallbackNonStrikerId =
       activeBatsmen.find((player) => !player.onStrike)?.id ||
       battingOptions.find((player) => player.id !== fallbackStrikerId)?.id ||
@@ -456,18 +461,25 @@ const DashboardHome = () => {
       normalizeId(currentBowler?._id) || bowlingOptions[0]?.id || "";
 
     setSelectedStrikerId((current) =>
-      battingOptions.some((player) => player.id === current) ? current : fallbackStrikerId,
+      battingOptions.some((player) => player.id === current)
+        ? current
+        : fallbackStrikerId,
     );
 
     setSelectedNonStrikerId((current) => {
-      if (battingOptions.some((player) => player.id === current) && current !== fallbackStrikerId) {
+      if (
+        battingOptions.some((player) => player.id === current) &&
+        current !== fallbackStrikerId
+      ) {
         return current;
       }
       return fallbackNonStrikerId;
     });
 
     setSelectedBowlerId((current) =>
-      bowlingOptions.some((player) => player.id === current) ? current : fallbackBowlerId,
+      bowlingOptions.some((player) => player.id === current)
+        ? current
+        : fallbackBowlerId,
     );
   }, [activeBatsmen, battingOptions, bowlingOptions, currentBowler]);
 
@@ -544,9 +556,13 @@ const DashboardHome = () => {
           overs: scoreToUpdate.overs || "0.0",
           runRate: scoreToUpdate.runRate || 0,
           target: scoreToUpdate.target,
-          striker: normalizeId(scoreToUpdate.striker?._id || scoreToUpdate.striker) || undefined,
+          striker:
+            normalizeId(scoreToUpdate.striker?._id || scoreToUpdate.striker) ||
+            undefined,
           nonStriker:
-            normalizeId(scoreToUpdate.nonStriker?._id || scoreToUpdate.nonStriker) || undefined,
+            normalizeId(
+              scoreToUpdate.nonStriker?._id || scoreToUpdate.nonStriker,
+            ) || undefined,
           currentBowler:
             normalizeId(
               scoreToUpdate.currentBowler?._id || scoreToUpdate.currentBowler,
@@ -557,10 +573,10 @@ const DashboardHome = () => {
           actionHistoryRef.current.shift();
         }
 
-        await axiosInstance.patch(
-          `/api/score/${scoreToUpdate._id}`,
-          { ...nextPayload, ...getPlayerSelectionPayload() },
-        );
+        await axiosInstance.patch(`/api/score/${scoreToUpdate._id}`, {
+          ...nextPayload,
+          ...getPlayerSelectionPayload(),
+        });
       } catch (updateError) {
         setError(
           updateError?.response?.data?.message ||
@@ -608,7 +624,8 @@ const DashboardHome = () => {
   const handleStrikerChange = (value) => {
     setSelectedStrikerId(value);
     if (value === selectedNonStrikerId) {
-      const alternate = battingOptions.find((player) => player.id !== value)?.id || "";
+      const alternate =
+        battingOptions.find((player) => player.id !== value)?.id || "";
       setSelectedNonStrikerId(alternate);
     }
   };
@@ -780,7 +797,9 @@ const DashboardHome = () => {
                 disabled={scoringDisabled || battingOptions.length === 0}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm font-semibold text-slate-700 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {!battingOptions.length && <option value="">No batsmen available</option>}
+                {!battingOptions.length && (
+                  <option value="">No batsmen available</option>
+                )}
                 {battingOptions.map((player) => (
                   <option key={player.id} value={player.id}>
                     {player.name}
@@ -799,7 +818,9 @@ const DashboardHome = () => {
                 disabled={scoringDisabled || battingOptions.length < 2}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm font-semibold text-slate-700 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {battingOptions.length < 2 && <option value="">Need 2 batsmen</option>}
+                {battingOptions.length < 2 && (
+                  <option value="">Need 2 batsmen</option>
+                )}
                 {battingOptions
                   .filter((player) => player.id !== selectedStrikerId)
                   .map((player) => (
@@ -820,7 +841,9 @@ const DashboardHome = () => {
                 disabled={scoringDisabled || bowlingOptions.length === 0}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm font-semibold text-slate-700 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {!bowlingOptions.length && <option value="">No bowlers available</option>}
+                {!bowlingOptions.length && (
+                  <option value="">No bowlers available</option>
+                )}
                 {bowlingOptions.map((player) => (
                   <option key={player.id} value={player.id}>
                     {player.name}

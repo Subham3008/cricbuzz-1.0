@@ -3,7 +3,8 @@ import { io } from "socket.io-client";
 import { Link } from "react-router-dom";
 import axiosInstance from "../../../../config/axiosInstance";
 
-const SOCKET_URL = axiosInstance.defaults.baseURL || "http://localhost:3000";
+const SOCKET_URL =
+  axiosInstance.defaults.baseURL || "https://cricbuzz-1-0.onrender.com";
 
 const normalizeId = (value) => {
   if (!value) return "";

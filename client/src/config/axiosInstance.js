@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-    baseURL: "http://localhost:3000",
+    baseURL: "https://cricbuzz-1-0.onrender.com",
     withCredentials: true,
 });
 

@@ -48,7 +48,7 @@ const Register = () => {
         {/* Google Button */}
         <button
           type="button"
-          onClick={() => (window.location.href = "http://localhost:3000/api/auth/google")}
+          onClick={() => (window.location.href = "https://cricbuzz-1-0.onrender.com/api/auth/google")}
           className="mt-4 flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 py-2.5 font-semibold text-gray-700 transition hover:bg-gray-50"
         >
           <img
