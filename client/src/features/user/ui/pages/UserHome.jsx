@@ -39,7 +39,9 @@ const deriveLiveView = (match) => {
   }
 
   const score = match.latestScore;
-  const battingTeamId = normalizeId(score?.battingTeam?._id || score?.battingTeam);
+  const battingTeamId = normalizeId(
+    score?.battingTeam?._id || score?.battingTeam,
+  );
   const team1Id = normalizeId(match?.team1?._id);
   const team2Id = normalizeId(match?.team2?._id);
   const fullScore = `${score?.score || 0}/${score?.wickets || 0}`;
@@ -83,9 +85,15 @@ export const UserHome = () => {
     try {
       const homeResponse = await axiosInstance.get("/api/home");
       const data = homeResponse.data?.data || {};
-      const liveMatches = Array.isArray(data.liveMatches) ? data.liveMatches : [];
-      const upcomingMatches = Array.isArray(data.upcomingMatches) ? data.upcomingMatches : [];
-      const recentMatches = Array.isArray(data.recentMatches) ? data.recentMatches : [];
+      const liveMatches = Array.isArray(data.liveMatches)
+        ? data.liveMatches
+        : [];
+      const upcomingMatches = Array.isArray(data.upcomingMatches)
+        ? data.upcomingMatches
+        : [];
+      const recentMatches = Array.isArray(data.recentMatches)
+        ? data.recentMatches
+        : [];
 
       const enrichedLiveMatches = await Promise.all(
         liveMatches.map(async (match) => {
@@ -95,11 +103,14 @@ export const UserHome = () => {
           try {
             const [detailsResponse, commentaryResponse] = await Promise.all([
               axiosInstance.get(`/api/matches/${matchId}`),
-              axiosInstance.get(`/api/matches/${matchId}/commentary?limit=1&page=1`),
+              axiosInstance.get(
+                `/api/matches/${matchId}/commentary?limit=1&page=1`,
+              ),
             ]);
 
             const details = detailsResponse.data?.data || {};
-            const latestCommentary = commentaryResponse.data?.data?.[0]?.text || "";
+            const latestCommentary =
+              commentaryResponse.data?.data?.[0]?.text || "";
 
             return {
               ...match,
@@ -109,7 +120,7 @@ export const UserHome = () => {
           } catch {
             return match;
           }
-        })
+        }),
       );
 
       setFeed({
@@ -118,7 +129,9 @@ export const UserHome = () => {
         recentMatches,
       });
     } catch (loadError) {
-      setError(loadError?.response?.data?.message || "Failed to load home feed");
+      setError(
+        loadError?.response?.data?.message || "Failed to load home feed",
+      );
     } finally {
       if (showLoader) setIsLoading(false);
     }
@@ -156,7 +169,9 @@ export const UserHome = () => {
     const socket = socketRef.current;
     if (!socket) return undefined;
 
-    const roomIds = feed.liveMatches.map((match) => normalizeId(match._id)).filter(Boolean);
+    const roomIds = feed.liveMatches
+      .map((match) => normalizeId(match._id))
+      .filter(Boolean);
     const handleRealtimeUpdate = () => {
       loadHomeFeed(false);
     };
@@ -195,7 +210,9 @@ export const UserHome = () => {
 
     const resultItems = feed.recentMatches.slice(0, 3).map((match) => ({
       id: `result-${match._id}`,
-      title: match.result || `${match.team1?.name} vs ${match.team2?.name} completed`,
+      title:
+        match.result ||
+        `${match.team1?.name} vs ${match.team2?.name} completed`,
       time: new Date(match.startTime).toLocaleString(),
       category: "Result",
     }));
@@ -208,17 +225,23 @@ export const UserHome = () => {
     () => deriveLiveView(featuredLiveMatch),
     [featuredLiveMatch],
   );
+  const featuredLiveMatchLink = featuredLiveMatch
+    ? `/matches/${featuredLiveMatch._id}`
+    : "/matches";
   const topUpcoming = feed.upcomingMatches.slice(0, 4);
 
   return (
     <main className="min-h-screen bg-[#f4f6f8] text-[#0f172a]">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link to="/" className="font-bold text-[22px] tracking-tight text-[#0e4f2f]">
+          <Link
+            to="/"
+            className="font-bold text-[22px] tracking-tight text-[#0e4f2f]"
+          >
             CricManager
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+          {/* <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
             <Link to="/matches" className="text-[#0e4f2f] border-b-2 border-[#0e4f2f] pb-1">
               Live Matches
             </Link>
@@ -228,7 +251,7 @@ export const UserHome = () => {
             <a href="#about" className="hover:text-slate-900">
               About
             </a>
-          </nav>
+          </nav> */}
 
           <div className="flex items-center gap-2">
             <Link
@@ -248,12 +271,6 @@ export const UserHome = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 pb-10">
-        {error && (
-          <div className="mt-4 mb-4 border border-red-200 bg-red-50 text-red-700 px-3 py-2 rounded text-sm font-semibold">
-            {error}
-          </div>
-        )}
-
         <section className="mt-6 rounded-xl overflow-hidden border border-[#0f5b38] bg-[#0a5a37]">
           <div className="grid lg:grid-cols-[1.15fr_1fr] gap-0">
             <div className="p-8 md:p-10 bg-[radial-gradient(circle_at_20%_20%,rgba(34,197,94,0.25),transparent_50%)]">
@@ -268,8 +285,8 @@ export const UserHome = () => {
               </h1>
               <p className="mt-4 text-sm md:text-base text-[#d5f2df] max-w-xl">
                 The world's most advanced cricket management platform. Get
-                ball-by-ball updates, deep analytics, and live player stats across
-                all major leagues.
+                ball-by-ball updates, deep analytics, and live player stats
+                across all major leagues.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
@@ -289,13 +306,22 @@ export const UserHome = () => {
 
             <div className="p-6 md:p-8 bg-[#0a4e31]/75 border-l border-[#2f7a56]">
               {isLoading ? (
-                <p className="text-sm font-semibold text-[#d5f2df]">Loading live match...</p>
+                <p className="text-sm font-semibold text-[#d5f2df]">
+                  Loading live match...
+                </p>
               ) : !featuredLiveMatch ? (
-                <p className="text-sm font-semibold text-[#d5f2df]">No live matches currently.</p>
+                <p className="text-sm font-semibold text-[#d5f2df]">
+                  No live matches currently.
+                </p>
               ) : (
-                <>
+                <Link
+                  to={featuredLiveMatchLink}
+                  className="block rounded-lg -m-2 p-2 transition hover:bg-white/5 cursor-pointer"
+                >
                   <div className="flex items-center justify-between text-[11px] uppercase text-[#bedfca] tracking-wide">
-                    <span>{featuredLiveMatch?.seriesId?.name || "Live Match"}</span>
+                    <span>
+                      {featuredLiveMatch?.seriesId?.name || "Live Match"}
+                    </span>
                     <span>Overs: {featuredLiveView.overs}</span>
                   </div>
 
@@ -345,33 +371,51 @@ export const UserHome = () => {
                       </span>
                     </div>
                   </div>
-                </>
+                  <p className="mt-4 text-[11px] font-bold uppercase tracking-wider text-[#8bffad]">
+                    Open Match Center
+                  </p>
+                </Link>
               )}
             </div>
           </div>
         </section>
 
-        <section id="fixtures" className="mt-8 bg-white border border-slate-200 rounded-xl p-5 md:p-6">
+        <section
+          id="fixtures"
+          className="mt-8 bg-white border border-slate-200 rounded-xl p-5 md:p-6"
+        >
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-3xl font-bold text-[#0f172a]">Upcoming Fixtures</h2>
+              <h2 className="text-3xl font-bold text-[#0f172a]">
+                Upcoming Fixtures
+              </h2>
               <p className="text-sm text-slate-500 mt-1">
                 Never miss a match with our comprehensive global calendar.
               </p>
             </div>
-            <Link to="/matches" className="text-sm font-semibold text-[#0b5b36] hover:underline">
+            <Link
+              to="/matches"
+              className="text-sm font-semibold text-[#0b5b36] hover:underline"
+            >
               View Full Calendar
             </Link>
           </div>
 
           {isLoading ? (
-            <div className="text-sm font-semibold text-slate-500">Loading upcoming fixtures...</div>
+            <div className="text-sm font-semibold text-slate-500">
+              Loading upcoming fixtures...
+            </div>
           ) : !topUpcoming.length ? (
-            <div className="text-sm font-semibold text-slate-500">No upcoming fixtures.</div>
+            <div className="text-sm font-semibold text-slate-500">
+              No upcoming fixtures.
+            </div>
           ) : (
             <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
               {topUpcoming.map((match) => (
-                <div key={match._id} className="border border-slate-200 rounded-lg p-4 bg-[#fafcff]">
+                <div
+                  key={match._id}
+                  className="border border-slate-200 rounded-lg p-4 bg-[#fafcff]"
+                >
                   <div className="text-[10px] uppercase tracking-wide text-slate-500">
                     {match?.seriesId?.name || "Fixture"}
                   </div>
@@ -384,29 +428,41 @@ export const UserHome = () => {
                       <div className="w-10 h-10 mx-auto rounded bg-slate-100 flex items-center justify-center text-xs font-bold">
                         {match?.team1?.shortName || "T1"}
                       </div>
-                      <p className="mt-2 text-xs font-semibold">{match?.team1?.name || "Team 1"}</p>
+                      <p className="mt-2 text-xs font-semibold">
+                        {match?.team1?.name || "Team 1"}
+                      </p>
                     </div>
-                    <span className="text-slate-300 font-black text-xs">VS</span>
+                    <span className="text-slate-300 font-black text-xs">
+                      VS
+                    </span>
                     <div className="text-center">
                       <div className="w-10 h-10 mx-auto rounded bg-slate-100 flex items-center justify-center text-xs font-bold">
                         {match?.team2?.shortName || "T2"}
                       </div>
-                      <p className="mt-2 text-xs font-semibold">{match?.team2?.name || "Team 2"}</p>
+                      <p className="mt-2 text-xs font-semibold">
+                        {match?.team2?.name || "Team 2"}
+                      </p>
                     </div>
                   </div>
 
-                  <p className="mt-4 text-[11px] text-slate-500">{match?.venue || "Venue TBA"}</p>
+                  <p className="mt-4 text-[11px] text-slate-500">
+                    {match?.venue || "Venue TBA"}
+                  </p>
                 </div>
               ))}
             </div>
           )}
         </section>
 
-        <section id="about" className="mt-8 rounded-xl overflow-hidden border border-[#0f5b38] bg-[#0a5a37] text-white">
+        <section
+          id="about"
+          className="mt-8 rounded-xl overflow-hidden border border-[#0f5b38] bg-[#0a5a37] text-white"
+        >
           <div className="grid lg:grid-cols-[1.1fr_1fr] gap-0">
             <div className="p-8 md:p-10">
               <h2 className="text-4xl font-black leading-tight">
-                Join the Global <span className="text-[#8bffad]">Cricket Community</span>
+                Join the Global{" "}
+                <span className="text-[#8bffad]">Cricket Community</span>
               </h2>
               <ul className="mt-6 space-y-3 text-sm text-[#d5f2df]">
                 <li>Personalized fan dashboard with your favorite teams.</li>
@@ -441,20 +497,34 @@ export const UserHome = () => {
 
         <section className="mt-6 bg-white border border-slate-200 rounded-xl p-5 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div>
-            <p className="text-3xl font-black text-[#0b5b36]">{feed.liveMatches.length}+ </p>
-            <p className="text-[11px] tracking-wider uppercase text-slate-500">Live Matches</p>
+            <p className="text-3xl font-black text-[#0b5b36]">
+              {feed.liveMatches.length}+{" "}
+            </p>
+            <p className="text-[11px] tracking-wider uppercase text-slate-500">
+              Live Matches
+            </p>
           </div>
           <div>
             <p className="text-3xl font-black text-[#0b5b36]">24/7</p>
-            <p className="text-[11px] tracking-wider uppercase text-slate-500">Live Data Updates</p>
+            <p className="text-[11px] tracking-wider uppercase text-slate-500">
+              Live Data Updates
+            </p>
           </div>
           <div>
-            <p className="text-3xl font-black text-[#0b5b36]">{feed.upcomingMatches.length}+ </p>
-            <p className="text-[11px] tracking-wider uppercase text-slate-500">Upcoming Fixtures</p>
+            <p className="text-3xl font-black text-[#0b5b36]">
+              {feed.upcomingMatches.length}+{" "}
+            </p>
+            <p className="text-[11px] tracking-wider uppercase text-slate-500">
+              Upcoming Fixtures
+            </p>
           </div>
           <div>
-            <p className="text-3xl font-black text-[#0b5b36]">{updateItems.length}+ </p>
-            <p className="text-[11px] tracking-wider uppercase text-slate-500">Live Updates</p>
+            <p className="text-3xl font-black text-[#0b5b36]">
+              {updateItems.length}+{" "}
+            </p>
+            <p className="text-[11px] tracking-wider uppercase text-slate-500">
+              Live Updates
+            </p>
           </div>
         </section>
 
@@ -463,7 +533,8 @@ export const UserHome = () => {
             <div>
               <p className="text-xl font-bold text-white">CricManager</p>
               <p className="text-sm mt-1">
-                Professional cricket analytics and live scoring for fans around the world.
+                Professional cricket analytics and live scoring for fans around
+                the world.
               </p>
             </div>
             <div className="mt-4 md:mt-0 text-xs uppercase tracking-wide flex gap-5">
@@ -474,7 +545,7 @@ export const UserHome = () => {
             </div>
           </div>
         </section>
-        </div>
+      </div>
     </main>
   );
 };
