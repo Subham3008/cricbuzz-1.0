@@ -32,7 +32,7 @@ export default class AuthController {
     );
 
     // Redirect user to dashboard after successful login
-    res.redirect("http://localhost:5173/home");
+    res.redirect("https://cricbuzzteam.vercel.app/home");
   }
 
   /**
