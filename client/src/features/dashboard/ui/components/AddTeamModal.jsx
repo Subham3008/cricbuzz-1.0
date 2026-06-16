@@ -23,7 +23,9 @@ const AddTeamModal = ({ isOpen, onClose }) => {
   };
 
   const isValidUrl = (str) => {
-    try { new URL(str); return true; } catch { return false; }
+    if (!str) return false;
+    const trimmed = str.trim();
+    return trimmed.startsWith('http') || trimmed.startsWith('data:image/');
   };
 
   const handleSubmit = async (e) => {
@@ -33,8 +35,8 @@ const AddTeamModal = ({ isOpen, onClose }) => {
       return;
     }
     if (!isValidUrl(formData.logo)) {
-      setError('Logo must be a valid URL (e.g. https://example.com/logo.png)');
-      return;
+       setError('Logo must be a valid URL or base64 data URI');
+       return;
     }
     if (formData.primaryColor && !/^#[0-9a-fA-F]{6}$/.test(formData.primaryColor)) {
       setError('Primary color must be a hex code like #1A2B3C');
