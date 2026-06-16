@@ -80,7 +80,10 @@ const LoginScreen = () => {
               {/* Google Login */}
               <button
                 type="button"
-                onClick={() => (window.location.href = "http://localhost:3000/api/auth/google")}
+                onClick={() => {
+                  const apiBaseURL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+                  window.location.href = `${apiBaseURL}/api/auth/google`;
+                }}
                 className="mt-5 flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white py-2.5 font-medium text-gray-700 transition hover:bg-gray-50"
               >
                 <img
