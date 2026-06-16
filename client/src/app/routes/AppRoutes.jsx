@@ -19,6 +19,7 @@ import LiveMatches from "../../features/dashboard/ui/screens/LiveMatches";
 import Logs from "../../features/dashboard/ui/screens/Logs";
 import Settings from "../../features/dashboard/ui/screens/Settings";
 import Support from "../../features/dashboard/ui/screens/Support";
+import ScoringPanel from "../../features/dashboard/ui/screens/ScoringPanel";
 
 const AppRoutes = () => {
   let dispatch = useDispatch();
@@ -104,6 +105,10 @@ const AppRoutes = () => {
             {
               path: "support",
               element: <Support />,
+            },
+            {
+              path: "scoring/:matchId",
+              element: <ScoringPanel />,
             }
           ],
         },
